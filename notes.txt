@@ -1,0 +1,19 @@
+STORE IT : Professional and Production-ready Storage Management Platform inspired by giants like Google Drive, Dropbox, and OneDrive
+    => STACK: Next.js 15, React 19, TypeScript, TailwindCSS, Chart.js, appwrite
+    => appwrite for backend services like self-hosting, database and Powerful APIs
+
+This Project is made for Learning concepts along with youtube video: https://www.youtube.com/watch?v=lie0cr3wESQ 
+
+I. Setting up tailwind config and global.css according to the theme and required styles which are reusable and gets repeated 
+
+II. AUTHENTICATION FORM: LOGIN PAGE (1st Page user will see)
+    =>SIGN-IN and SIGN-UP pages have many things common like page-design, buttons
+    =>So created a ROUTE-GROUP "(auth)" and created both 'sign-in' and 'sign-up' routes inside it
+    =>To create a common layout.tsx which includes common styling
+        =>LARGE SCREENS >=1024px : A side template design having LOGO, catchy lines and illustration 
+        => SMALL SCREENS : A Logo above the form 
+    => Now Creating a common FORM component for both the Pages to use in components/AuthForm.tsx
+        {/* Using shadcn/ui FORM to create FORM and validate inputs through ZOD as it is simpler */}
+        {/* shadcn/ui <FORM>: building forms with react-hook-form and zod */}
+            {/* Read shadcn/ui/form Documentation and follow the steps: https://ui.shadcn.com/docs/components/form  */}
+    
