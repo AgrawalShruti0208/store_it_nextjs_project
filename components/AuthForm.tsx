@@ -22,6 +22,8 @@ import Link from 'next/link'
     } from "@/components/ui/form"
 
     import { Input } from "@/components/ui/input"
+import { createAccount } from '@/lib/actions/user.actions'
+import OTPModal from './OTPModal'
 
     
     
@@ -43,11 +45,14 @@ import Link from 'next/link'
 
 const AuthForm = ({type}:{type: 'sign-in'|'sign-up'}) => {
 
-     //state variable to have 'Loading' state when form is being submitted..
+    //state variable to have 'Loading' state when form is being submitted..
         const [isLoading, setIsLoading] = useState(false); 
     
-     //state variable to contain error message to be displayed at the end of the form
-        const [errorMessage, seterrorMessage] = useState(""); 
+    //state variable to contain error message to be displayed at the end of the form
+        const [errorMessage, setErrorMessage] = useState(""); 
+    
+    // state variable to store accountId returned by createAccount() function from server actions file
+        const [accountId, setAccountId] = useState(null);
 
         // get the form schema based on the type 'sign-in' | 'sign-up'
         const formSchema = authFormSchema(type);
@@ -64,8 +69,36 @@ const AuthForm = ({type}:{type: 'sign-in'|'sign-up'}) => {
  
     // 2. Function to be triggered when form is submitted
         const onSubmit = async (values: z.infer<typeof formSchema>)=>{
+
+            // 1. Set Loading true, as we are performing some operation on the entered values
+                setIsLoading(true);
+                setErrorMessage("");
            
-            console.log(values)
+            try {
+            
+                // 2. creating user in the database by providing values to it
+                    const user = await createAccount({
+                        fullName: values.fullName || "",
+                        email: values.email 
+                    });
+            
+                // 3. Set the value of accountId
+                    setAccountId(user.accountId);
+
+            }catch {
+
+                setErrorMessage("Failed to create account! Please try again.");
+
+            }finally {
+
+                setIsLoading(false);
+            }
+
+
+            
+
+
+           
         }
 
   return (
@@ -176,7 +209,11 @@ const AuthForm = ({type}:{type: 'sign-in'|'sign-up'}) => {
             
             </form>
         </Form>
-
+        
+        {/*When we have an accountId means email has been sent to the user with OTP, 
+           then we have to display a Modal component to verify OTP*/}
+           {accountId && <OTPModal email={form.getValues('email')} accountId = {accountId} />}
+    
     </>
   )
 }

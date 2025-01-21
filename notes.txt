@@ -16,4 +16,36 @@ II. AUTHENTICATION FORM: LOGIN PAGE (1st Page user will see)
         {/* Using shadcn/ui FORM to create FORM and validate inputs through ZOD as it is simpler */}
         {/* shadcn/ui <FORM>: building forms with react-hook-form and zod */}
             {/* Read shadcn/ui/form Documentation and follow the steps: https://ui.shadcn.com/docs/components/form  */}
+        Created Common form with props 'type = sign-in | sign-out' to make any changes in the form 
+
+III. Now to perform all the BACKEND Functionalities like User Authentication, Registration. Login, File Storage using APPWRITE 
+     cloud.appwrite.io (signed in using personal mail *155)
+
+     => created Store It - Nextjs Project on appwrite and made the required environment variables in a new file in root directory .env.local
+     and created a general database having 2 collections inside it : 'users' and 'files' `
+
+    => Installed npm install node-appwrite --save package to integrate appwrite in our Project
+
+    => Created a new file in new folder to import all the appwrite envs and export them to use them with ease (lib/appwrite/config.ts)
+
+    => Created a new file (index.ts) inside the 'lib/appwrite/' folder in which setup will be done for the integration
+        => created two clients - SESSION Client to perform actions specific to USERS 
+                                 ADMIN Client to perform actions specific to ADMIN 
+
+    => Now creating server actions file to perform all the actions (registering a new user, logging in the existing account user etc.)
+        => Creating new folder and new file 'lib/actions/user.action.ts' 
+        => Created a server action 'Create Account' in user.actions.ts and invoked the function in AuthForm component
+        => This function sends An OTP to the email provided by user
+        
+    => Now to take this OTP Token from user as input creating OTP Modal that will appear on the top of all the components on Page
+        =>Creating components/OTPModal.tsx and CREATING OTP MODAL for Verification using SHADCN/UI ALERT-DIALOG component
+        =>https://ui.shadcn.com/docs/components/alert-dialog
+
+        => And for creating Boxes to take input as OTP and provide paste options using another shadcn/ui component
+        => Input OTP : https://ui.shadcn.com/docs/components/input-otp
+
+
+    =>After creating UI for OTP Modal now creating server action to verify the OTP submitted by User in users.actions.ts
+    => If OTP input is valid, then a session is created for the user and the session is stored inside cookies
+    => And after integrating this server action in OTPModal component, if sessionId is returned by the server action then only redirect to the HOME page
     
