@@ -49,3 +49,21 @@ III. Now to perform all the BACKEND Functionalities like User Authentication, Re
     => If OTP input is valid, then a session is created for the user and the session is stored inside cookies
     => And after integrating this server action in OTPModal component, if sessionId is returned by the server action then only redirect to the HOME page
     
+IV. HOME PAGE UI DESIGN 
+    => creating new ROUTE Group (root) for Home page as layout will contain our SIDE NAVIGATION BAR for all the pages.
+    => layout.tsx in (root) has three child components : Sidebar , MobileNavigation,[ Header => for device screens greater than mobile]
+        =>In layout.tsx we need a server action to fetch logged-in user information to display it so creating that server action and integrating it in frontend
+        =>/components/Header.tsx contains two child components : Search, FileUploader and a Log Out BUTTON inside it
+
+    =>SIDEBAR: SideBar component to display different pages: DASHBOARD is Home page, DOCUMENTS, IMAGES, MEDIA, Others and USER information
+    =>MobileNavigation: component to display navigation menu on click of menu icon on small devices
+
+
+V. Finalizing AUTH: 
+
+    =>Logout functionality
+        =>Server action to logout user by deleting the current user session and remove the sessionId from browser cookies
+        =>Integrated them in both Header's form action and MobileNavigation's onClick 
+        
+
+

@@ -1,9 +1,12 @@
 'use server'
 import { ID, Query } from "node-appwrite";
-import { createAdminClient } from "../appwrite";
+import { createAdminClient, createSessionClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
 import { parseStringify } from "../utils";
 import { cookies } from "next/headers";
+import { avatarPlaceholderURL } from "@/constants";
+import { redirect } from "next/navigation";
+
 
  //use server directive to make sure this file runs on server only
 
@@ -81,7 +84,11 @@ import { cookies } from "next/headers";
                 }) =>{
 
                     // checking if user exists or not using helper function
-                        const existingUser = getUserByEmail(email);
+                        const existingUser = await getUserByEmail(email);
+
+                        if(existingUser!=null){
+                            return parseStringify({accountId:null, error:"User account already exists! Please Sign-In."});
+                        }
                     
                     
                     // invoke another helper function to send OTP to the email provided and get accountId 
@@ -103,15 +110,15 @@ import { cookies } from "next/headers";
                             {
                                 fullName,
                                 email,
-                                avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT88sjkXhyDhMPNj_GppWfcCA5K--03vFvU9r5jT79oJTVAYkvczlUL_LjzLJPbC7gy4FA&usqp=CAU",
-                                accountId
+                                avatar: avatarPlaceholderURL,
+                                accountId,
                             },
                         );
                     }
 
                     // return the accountId but in server actions payload is provided by first converting it to string and then parsing it
                         //which we will do via another helper function created in lib/utils file
-                        return parseStringify({accountId});
+                        return parseStringify({accountId:accountId, error:null});
 
             };
 
@@ -145,4 +152,84 @@ import { cookies } from "next/headers";
                 }
 
             }
+
+        // Server action to fetch details of current logged-in user
+            export const getCurrentUser = async() =>{
+
+                try {
+                    // SESSION Client as we need current user's info
+                    // accessing databases and account from it
+                        const {databases, account} = await createSessionClient();
+
+                    // Get account: Get the currently logged in user's account information.
+                        const result = await account.get();
+
+                    // through this account ID we have to fetch the user information
+                        const user = await databases.listDocuments(
+                            appwriteConfig.databaseId,
+                            appwriteConfig.usersCollectionId,
+                            [Query.equal("accountId", result.$id)]
+                        )
+
+                    // If no document found, return null
+                        if(user.total <= 0) return null;
+                        
+                    // else
+                        return parseStringify(user.documents[0]);
+                    
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+
+        //  Server action to LOGOUT the user
+            export const signOutUser = async()=>{
+
+                // get the account information from session client
+                    const {account} = await createSessionClient()
+
+                // delete session
+                try {
+
+                    // Delete current session of the user
+                        await account.deleteSession('current');
+                    
+                    // Remove appwrite-session from the browser cookies
+                        (await cookies()).delete('appwrite-session');
+                
+                } catch (error) {
+                    
+                    handleError(error, 'Failed to Sign Out the User.');
+                
+                }finally{
+                    // whatever happens redirect the user to sign-in page
+                    redirect('/sign-in');
+                
+                }
+            }
+
+        // Server action to SIGN-IN THE USER only if user exists
+            export const signInUser = async({ email }:{ email : string}) => {
+
+                try {
+                    const existingUser = await getUserByEmail(email);
+
+                    if(!existingUser){
+                        return parseStringify({ accountId: null, error: "User account not found! Please Sign-Up." });
+                    }
+
+                    // If user exists, send the OTP to user and return its accountId.
+                    
+                    await sendEmailOTP({email});
+                    return parseStringify({accountId : existingUser.accountId, error: null });
+                    
+                
+                    
+                    
+                } catch (error) {
+                    handleError(error, "Failed to sign in user");
+                }
+            }
+
+        
 

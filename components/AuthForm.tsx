@@ -21,29 +21,29 @@ import Link from 'next/link'
     FormMessage,
     } from "@/components/ui/form"
 
-    import { Input } from "@/components/ui/input"
-import { createAccount } from '@/lib/actions/user.actions'
+import { Input } from "@/components/ui/input"
+import { createAccount, signInUser } from '@/lib/actions/user.actions'
 import OTPModal from './OTPModal'
+import { useRouter } from 'next/navigation'
 
-    
+    type FormType = "sign-in" | "sign-up";
     
     //formSchema to include all the fields and their validation rules and return error if found invalid input
-    const authFormSchema = (formType: 'sign-in'| 'sign-up') =>{
-        return(
-            z.object({
+    const authFormSchema = (formType: FormType) =>{
+        return z.object({
                 
                 email: z.string().email(),
                 
                 fullName: formType ==='sign-up' 
-                            ? z.string().min(10, {message: "Full Name must be at least 10 characters."})
-                            : z.string().optional()
+                            ? z.string().min(8).max(50)
+                            : z.string().optional(),
                         
-            })
-        );
-    }
+            });
+        
+    };
 
 
-const AuthForm = ({type}:{type: 'sign-in'|'sign-up'}) => {
+const AuthForm = ({type}:{type: FormType}) => {
 
     //state variable to have 'Loading' state when form is being submitted..
         const [isLoading, setIsLoading] = useState(false); 
@@ -56,6 +56,8 @@ const AuthForm = ({type}:{type: 'sign-in'|'sign-up'}) => {
 
         // get the form schema based on the type 'sign-in' | 'sign-up'
         const formSchema = authFormSchema(type);
+
+        const router = useRouter();
 
      // 1. Function to define the form with input validation through formShema via zod
         const form = useForm<z.infer<typeof formSchema>>({
@@ -77,17 +79,38 @@ const AuthForm = ({type}:{type: 'sign-in'|'sign-up'}) => {
             try {
             
                 // 2. creating user in the database by providing values to it
-                    const user = await createAccount({
-                        fullName: values.fullName || "",
-                        email: values.email 
-                    });
+                    const {accountId, error} = 
+                        type === 'sign-up'  
+                          ? await createAccount({
+                                fullName: values.fullName || "",
+                                email: values.email 
+                            })
+                        
+                          : await signInUser({email: values.email});
+                        
+
+
+                    if(error==null && accountId!=null){
+                         // 3. If no error returned, Set the value of accountId
+                            setAccountId(accountId);
+                    }
+
+                    if(error!=null){
+                        setErrorMessage(error+' Redirecting...');
+                        setTimeout(()=>{
+
+                            router.push(error==="User account already exists! Please Sign-In."?'/sign-in':'/sign-up');
+                        
+                        },2000);
+                        
+                        
+                    }
             
-                // 3. Set the value of accountId
-                    setAccountId(user.accountId);
+               
 
             }catch {
 
-                setErrorMessage("Failed to create account! Please try again.");
+                setErrorMessage("Process Failed! Please try again.");
 
             }finally {
 
